@@ -8,7 +8,7 @@ st.set_page_config(page_title="Flight Delay Dashboard", layout="wide")
 st.title("✈️ Airline Flight Delay Dashboard")
 st.write("Interactive analysis of U.S. flight delays, cancellations, routes, and delay causes.")
 
-
+# Load dataset from local CSV file and cache it for performance
 @st.cache_data
 def load_data():
     file_path = Path("data/cleaned_flight_data.csv")
@@ -30,14 +30,17 @@ def load_data():
 
 df = load_data()
 
-# Feature engineering
+# Feature Engineering: create new variables for analysis
+# - Extract time features (Year, Month, Day)
+# - Create Route (Origin → Destination)
+# - Categorize delays and identify delayed flights
 df["Year"] = df["FL_DATE"].dt.year
 df["Month"] = df["FL_DATE"].dt.month
 df["Month_Name"] = df["FL_DATE"].dt.month_name()
 df["Day_Of_Week"] = df["FL_DATE"].dt.day_name()
 df["Route"] = df["ORIGIN"] + " → " + df["DEST"]
 
-
+# Helper function to convert month into season category
 def get_season(month):
     if month in [12, 1, 2]:
         return "Winter"
@@ -59,6 +62,7 @@ df["Delay_Category"] = pd.cut(
     labels=["Early/On-time", "Minor", "Moderate", "Major", "Extreme"]
 )
 
+# Handle delay cause columns and compute dominant delay cause
 cause_cols = [
     "CARRIER_DELAY",
     "WEATHER_DELAY",
@@ -75,7 +79,7 @@ if available_causes:
     df["Dominant_Delay_Cause"] = df[available_causes].idxmax(axis=1)
     df.loc[df["Total_Cause_Delay"] == 0, "Dominant_Delay_Cause"] = "No Cause Listed"
 
-# Sidebar filters
+# Sidebar filters for interactive exploration (airline, year, origin)
 st.sidebar.header("Filters")
 
 airlines = sorted(df["OP_CARRIER"].dropna().unique())
@@ -110,7 +114,7 @@ if filtered_df.empty:
     st.warning("No data available for the selected filters.")
     st.stop()
 
-# KPIs
+# Key performance indicators summarizing filtered dataset
 st.subheader("Key Metrics")
 
 col1, col2, col3, col4 = st.columns(4)
@@ -132,9 +136,11 @@ tab1, tab2, tab3, tab4 = st.tabs([
     "Route Delay Analysis"
 ])
 
+# Tab 1: Distribution of delays
 with tab1:
     st.subheader("Distribution of Arrival Delays")
 
+    # Histogram showing distribution of arrival delays
     fig7 = px.histogram(
         filtered_df,
         x="ARR_DELAY",
@@ -170,7 +176,7 @@ with tab1:
     "Insight: Most flights fall into early/on-time or moderate delay categories, indicating that delays are generally manageable. Major delays occur less frequently, and no extreme delays are observed in this dataset."
 )
     
-
+# Tab 2: Analysis of delay causes
 with tab2:
     st.subheader("Proportion of Delay Occurrences by Cause")
 
@@ -228,7 +234,7 @@ with tab2:
     "Insight: Late aircraft delays result in the highest average delay time, making them the most severe cause. Carrier and NAS delays also contribute significantly, while security delays have minimal impact."
 )
 
-    
+# Tab 3: Airline performance analysis    
 with tab3:
     st.subheader("Arrival Delay Rate by Airline (%)")
 
@@ -305,7 +311,7 @@ with tab3:
     )
     st.plotly_chart(fig3, use_container_width=True)
     
-
+# Tab 4: Route-level delay analysis
 with tab4:
     st.subheader("High-Risk Routes Based on Delay Frequency and Severity")
 
@@ -340,6 +346,7 @@ with tab4:
     "Insight: Delay patterns vary significantly across routes, with certain origin–destination pairs showing consistently higher delays. This indicates that delays are route-specific rather than uniform across all flights, suggesting that factors such as airport congestion, traffic volume, or regional conditions play a role."
     )
 
+    # Scatter plot combining delay severity, frequency, and volume
     route_risk = (
         filtered_df.groupby("Route")
         .agg(
@@ -374,9 +381,20 @@ with tab4:
     )
 
 st.markdown("---")
-st.subheader("Project Notes")
+st.subheader("Key Insights")
+
 st.write("""
-This dashboard uses engineered features such as delay categories, delay rate,
-route-level delay statistics, day/month/season features, and dominant delay causes.
-These features help move the project beyond basic EDA into deeper analytical storytelling.
+- Flight delays are an industry-wide issue, with similar delay rates across airlines.
+- Delays are highly route-specific, with certain airport pairs consistently experiencing higher delays.
+- Delay causes occur at similar frequencies, but their impact differs significantly.
+- Late aircraft delays are the most severe, making them the most impactful contributor.
+- Most delays are small to moderate, indicating generally stable but imperfect operations.
+""")
+
+st.subheader("Limitations")
+
+st.write("""
+- The dataset contains only partial time coverage, limiting temporal and seasonal analysis.
+- External factors such as detailed weather conditions and airport congestion are not fully captured.
+- This analysis is descriptive and does not predict future delays.
 """)
