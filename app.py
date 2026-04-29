@@ -125,16 +125,112 @@ else:
     col4.metric("Cancellation Rate", "N/A")
 
 # Tabs
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "Notebook Figures",
-    "Route Heatmap",
+tab1, tab2, tab3, tab4 = st.tabs([
+    "Distribution of Arrival Delays",
     "Delay Causes",
-    "Distribution",
-    "Advanced Analysis"
+    "Carrier Delay Analysis",
+    "Route Delay Analysis"
 ])
 
 with tab1:
-    st.subheader("Average Arrival Delay by Airline")
+    st.subheader("Distribution of Arrival Delays")
+
+    fig7 = px.histogram(
+        filtered_df,
+        x="ARR_DELAY",
+        nbins=50,
+        title="Distribution of Arrival Delays",
+        labels={"ARR_DELAY": "Delay (minutes)"}
+    )
+
+    st.plotly_chart(fig7, use_container_width=True)
+
+    st.subheader("Delay Category Distribution")
+
+    category_counts = (
+        filtered_df["Delay_Category"]
+        .value_counts()
+        .reset_index()
+    )
+
+    category_counts.columns = ["Delay Category", "Count"]
+    st.caption(
+    "Insight: The distribution of delays is approximately symmetric with a slight right skew, indicating that most flights experience small to moderate delays, with fewer large delays occurring less frequently."
+    )
+
+    fig8 = px.bar(
+        category_counts,
+        x="Delay Category",
+        y="Count",
+        title="Delay Category Distribution"
+    )
+
+    st.plotly_chart(fig8, use_container_width=True)
+    st.caption(
+    "Insight: Most flights fall into early/on-time or moderate delay categories, indicating that delays are generally manageable. Major delays occur less frequently, and no extreme delays are observed in this dataset."
+)
+    
+
+with tab2:
+    st.subheader("Proportion of Delay Occurrences by Cause")
+
+    available_delay_cols = [col for col in cause_cols if col in filtered_df.columns]
+
+    if available_delay_cols:
+        delay_counts = pd.DataFrame({
+            col: (filtered_df[col] > 0).sum()
+            for col in available_delay_cols
+        }, index=[0]).T.reset_index()
+
+        delay_counts.columns = ["Delay Cause", "Number of Delays"]
+
+        fig6 = px.pie(
+            delay_counts,
+            names="Delay Cause",
+            values="Number of Delays",
+            title="Proportion of Delay Occurrences by Cause"
+        )
+
+        st.plotly_chart(fig6, use_container_width=True)
+
+        st.caption(
+        "Insight: Delay occurrences are relatively evenly distributed across all causes, suggesting that no single factor dominates in frequency. This indicates that flight delays arise from a combination of operational and external factors rather than one primary source."
+        )
+
+    else:
+        st.warning("No delay cause columns found in this dataset.")
+
+
+    st.subheader("Average Delay by Cause")
+
+    if available_causes:
+        avg_delay_by_cause = filtered_df[available_causes].mean().reset_index()
+        avg_delay_by_cause.columns = ["Cause", "Average Delay (in minutes)"]
+
+        fig9 = px.bar(
+            avg_delay_by_cause,
+            x="Cause",
+            y="Average Delay (in minutes)",
+            color="Cause",
+            title="Average Delay by Cause",
+            labels={
+                "Cause": "Cause",
+                "Average Delay": "Average Delay"
+            }
+        )
+
+        fig9.update_layout(xaxis_tickangle=-35)
+        st.plotly_chart(fig9, use_container_width=True)
+    else:
+        st.warning("Delay cause columns were not found.")
+
+    st.caption(
+    "Insight: Late aircraft delays result in the highest average delay time, making them the most severe cause. Carrier and NAS delays also contribute significantly, while security delays have minimal impact."
+)
+
+    
+with tab3:
+    st.subheader("Arrival Delay Rate by Airline (%)")
 
     delay_rate = (
     filtered_df.groupby("OP_CARRIER")["Is_Delayed"]
@@ -150,14 +246,16 @@ with tab1:
     y="Is_Delayed",
     color="Is_Delayed",
     title="Delay Rate by Airline",
-    labels={"OP_CARRIER": "Airline",
+    labels={"OP_CARRIER": "Airline", 
         "Is_Delayed": "Delay Rate (%)"}
     )
 
     st.plotly_chart(fig1, use_container_width=True)
+    st.caption(
+    "Insight: Delay rates are relatively high across all airlines, ranging around 45%–50%, suggesting that delays are a widespread issue rather than being limited to a single carrier. However, some airlines show slightly higher delay rates, indicating potential differences in operational efficiency."
+    )
 
     st.subheader("Monthly Delay Trend")
-
     monthly_delay = (
         filtered_df.groupby(["Year", "Month"])["ARR_DELAY"]
         .mean()
@@ -206,29 +304,10 @@ with tab1:
         labels={"ARR_DELAY": "Delay (minutes)", "Season": "Season"}
     )
     st.plotly_chart(fig3, use_container_width=True)
+    
 
-    st.subheader("Top 10 Worst Routes")
-
-    top_routes = (
-        filtered_df.groupby("Route")["ARR_DELAY"]
-        .mean()
-        .sort_values(ascending=False)
-        .head(10)
-        .reset_index()
-    )
-
-    fig4 = px.bar(
-        top_routes,
-        x="ARR_DELAY",
-        y="Route",
-        orientation="h",
-        title="Top 10 Worst Routes",
-        labels={"ARR_DELAY": "Delay (minutes)", "Route": "Route"}
-    )
-    st.plotly_chart(fig4, use_container_width=True)
-
-with tab2:
-    st.subheader("Average Delay Heatmap: Top Airports")
+with tab4:
+    st.subheader("High-Risk Routes Based on Delay Frequency and Severity")
 
     top_airports = filtered_df["ORIGIN"].value_counts().head(10).index
 
@@ -256,84 +335,10 @@ with tab2:
     )
 
     st.plotly_chart(fig5, use_container_width=True)
-
-with tab3:
-    st.subheader("Proportion of Delay Causes")
-
-    available_delay_cols = [col for col in cause_cols if col in filtered_df.columns]
-
-    if available_delay_cols:
-        delay_causes = filtered_df[available_delay_cols].mean().reset_index()
-        delay_causes.columns = ["Delay Cause", "Average Minutes"]
-
-        fig6 = px.pie(
-            delay_causes,
-            names="Delay Cause",
-            values="Average Minutes",
-            title="Proportion of Delay Causes"
-        )
-
-        st.plotly_chart(fig6, use_container_width=True)
-    else:
-        st.warning("No delay cause columns found in this dataset.")
-
-with tab4:
-    st.subheader("Distribution of Arrival Delays")
-
-    fig7 = px.histogram(
-        filtered_df,
-        x="ARR_DELAY",
-        nbins=50,
-        title="Distribution of Arrival Delays",
-        labels={"ARR_DELAY": "Delay (minutes)"}
+    st.write("This heatmap shows average delay between major airport pairs, helping identify high-risk routes.")
+    st.caption(
+    "Insight: Delay patterns vary significantly across routes, with certain origin–destination pairs showing consistently higher delays. This indicates that delays are route-specific rather than uniform across all flights, suggesting that factors such as airport congestion, traffic volume, or regional conditions play a role."
     )
-
-    st.plotly_chart(fig7, use_container_width=True)
-
-    st.subheader("Delay Category Distribution")
-
-    category_counts = (
-        filtered_df["Delay_Category"]
-        .value_counts()
-        .reset_index()
-    )
-
-    category_counts.columns = ["Delay Category", "Count"]
-
-    fig8 = px.bar(
-        category_counts,
-        x="Delay Category",
-        y="Count",
-        title="Delay Category Distribution"
-    )
-
-    st.plotly_chart(fig8, use_container_width=True)
-
-with tab5:
-    st.subheader("Average Delay by Cause")
-
-    if available_causes:
-        avg_delay_by_cause = filtered_df[available_causes].mean().reset_index()
-        avg_delay_by_cause.columns = ["Cause", "Average Delay"]
-
-        fig9 = px.bar(
-            avg_delay_by_cause,
-            x="Cause",
-            y="Average Delay",
-            color="Cause",
-            title="Average Delay by Cause",
-            labels={
-                "Cause": "Cause",
-                "Average Delay": "Average Delay"
-            }
-        )
-
-        fig9.update_layout(xaxis_tickangle=-35)
-        st.plotly_chart(fig9, use_container_width=True)
-    else:
-        st.warning("Delay cause columns were not found.")
-
-    st.subheader("Route Delay Risk Analysis")
 
     route_risk = (
         filtered_df.groupby("Route")
@@ -363,6 +368,10 @@ with tab5:
     )
 
     st.plotly_chart(fig10, use_container_width=True)
+
+    st.caption(
+    "Insight: By combining flight volume, delay severity, and delay rate, this chart identifies high-risk routes. Routes with both high traffic and high delays are the most impactful, as they affect a large number of passengers while experiencing significant delays."
+    )
 
 st.markdown("---")
 st.subheader("Project Notes")
