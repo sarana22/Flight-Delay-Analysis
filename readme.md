@@ -14,12 +14,9 @@ It includes data analysis in a Jupyter notebook and an interactive dashboard bui
 
 ---
 
-## Dataset
+## Dataset and Data Cleaning
 The dataset is based on U.S. airline flight delay records from the Bureau of Transportation Statistics (BTS). It includes airline, origin, destination, arrival delay, cancellation, and delay cause information.
 
----
-
-## Data Cleaning
 - Converted flight dates to datetime format
 - Renamed carrier column for consistency
 - Filled missing delay-cause values with 0
@@ -42,6 +39,13 @@ The dataset is based on U.S. airline flight delay records from the Bureau of Tra
 
 ---
 
+## Limitations
+- Delay causes may be incomplete for some records
+- External factors like detailed weather and airport congestion are not included
+- This project is descriptive, not predictive
+
+---
+
 ## 🚀 How to Run
 ```bash
 pip install -r requirements.txt
@@ -53,7 +57,3 @@ Python, Pandas, Plotly, Streamlit
 
 ---
 
-## Limitations
-- Delay causes may be incomplete for some records
-- External factors like detailed weather and airport congestion are not included
-- This project is descriptive, not predictive
