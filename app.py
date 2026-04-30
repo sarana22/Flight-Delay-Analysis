@@ -161,7 +161,7 @@ with tab1:
 
     category_counts.columns = ["Delay Category", "Count"]
     st.caption(
-    "Insight: The distribution of delays is approximately symmetric with a slight right skew, indicating that most flights experience small to moderate delays, with fewer large delays occurring less frequently."
+    "Insight: The distribution of arrival delays is strongly right-skewed, with most flights experiencing small delays near zero. However, a long tail of large delays indicates that while severe delays are rare, they can be extremely high and contribute significantly to overall variability."
     )
 
     fig8 = px.bar(
@@ -173,8 +173,8 @@ with tab1:
 
     st.plotly_chart(fig8, use_container_width=True)
     st.caption(
-    "Insight: Most flights fall into early/on-time or moderate delay categories, indicating that delays are generally manageable. Major delays occur less frequently, and no extreme delays are observed in this dataset."
-)
+    "Insight: The majority of flights fall into early/on-time or minor delay categories, indicating generally stable operations. However, the presence of moderate, major, and extreme delays shows that while rare, severe delays do occur and contribute to variability in overall flight performance."
+    )
     
 # Tab 2: Analysis of delay causes
 with tab2:
@@ -200,7 +200,7 @@ with tab2:
         st.plotly_chart(fig6, use_container_width=True)
 
         st.caption(
-        "Insight: Delay occurrences are relatively evenly distributed across all causes, suggesting that no single factor dominates in frequency. This indicates that flight delays arise from a combination of operational and external factors rather than one primary source."
+            "Insight: Delay occurrences are overwhelmingly concentrated in carrier, late aircraft, and NAS-related factors, which together account for over 95% of all delays. In contrast, weather and security delays are minimal, indicating that most delays stem from operational and system-level inefficiencies rather than external disruptions."
         )
 
     else:
@@ -258,7 +258,7 @@ with tab3:
 
     st.plotly_chart(fig1, use_container_width=True)
     st.caption(
-    "Insight: Delay rates are relatively high across all airlines, ranging around 45%–50%, suggesting that delays are a widespread issue rather than being limited to a single carrier. However, some airlines show slightly higher delay rates, indicating potential differences in operational efficiency."
+    "Insight: Delay rates vary across airlines, generally ranging between 15% and 30%. While no single airline dominates in delays, some carriers consistently show higher delay rates, suggesting differences in operational efficiency and scheduling performance."
     )
 
     st.subheader("Monthly Delay Trend")
@@ -283,6 +283,9 @@ with tab3:
         labels={"ARR_DELAY": "Delay (minutes)", "Time": "Time"}
     )
     st.plotly_chart(fig2, use_container_width=True)
+    st.caption(
+    "Insight: Delay patterns fluctuate over time, with noticeable peaks during mid-year periods across multiple years. This suggests that delays may increase during high travel seasons, such as summer, when flight demand and air traffic volume are higher."
+    )
 
     st.subheader("Average Delay by Season")
 
@@ -310,6 +313,9 @@ with tab3:
         labels={"ARR_DELAY": "Delay (minutes)", "Season": "Season"}
     )
     st.plotly_chart(fig3, use_container_width=True)
+    st.caption(
+    "Insight: Seasonal trends reveal that delays peak during the summer months, likely due to increased travel demand and airport congestion. In contrast, fall experiences the lowest delays, suggesting more stable and less crowded flight operations."
+    )
     
 # Tab 4: Route-level delay analysis
 with tab4:
@@ -343,8 +349,8 @@ with tab4:
     st.plotly_chart(fig5, use_container_width=True)
     st.write("This heatmap shows average delay between major airport pairs, helping identify high-risk routes.")
     st.caption(
-    "Insight: Delay patterns vary significantly across routes, with certain origin–destination pairs showing consistently higher delays. This indicates that delays are route-specific rather than uniform across all flights, suggesting that factors such as airport congestion, traffic volume, or regional conditions play a role."
-    )
+    "Insight: The heatmap reveals clear variation in average delays across routes, with certain airport pairs consistently experiencing higher delays. This suggests that delays are not uniform across the network but are concentrated in specific routes, likely due to congestion, demand, or operational constraints at key airports."
+    ) 
 
     # Scatter plot combining delay severity, frequency, and volume
     route_risk = (
@@ -377,7 +383,7 @@ with tab4:
     st.plotly_chart(fig10, use_container_width=True)
 
     st.caption(
-    "Insight: By combining flight volume, delay severity, and delay rate, this chart identifies high-risk routes. Routes with both high traffic and high delays are the most impactful, as they affect a large number of passengers while experiencing significant delays."
+    "Insight: The relationship between flight volume and delays shows that low-frequency routes exhibit higher variability and more extreme delays, while high-volume routes tend to maintain more stable delay patterns. This indicates that operational consistency improves with route frequency, even under higher traffic conditions."
     )
 
 st.markdown("---")
