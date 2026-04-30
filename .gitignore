@@ -4,4 +4,4 @@ __pycache__/
 venv/
 .env/
 .DS_Store
-Thumbs.db
+data/cleaned_flight_data.csv
